@@ -1,0 +1,138 @@
+---
+title: "Clustering and Factor Analysis"
+output: html_document
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(psych)
+library(reshape2)
+```
+
+##We want to cluster the customers by their conception of the importancy of canteen attributes. (Large values indicate more importancy.)
+```{r cars}
+canteen <- read.csv("../data/q6_response.csv", header = T) 
+canteen<-canteen[,14:21]
+canteen<-canteen[,-c(7)] #rid of "specify other food attributes you care about very much" variable
+canteen$id <-1:53
+names(canteen) <- c("location", "value to price", "efficiency", "taste", "quantity", "display",  "envir","id")
+
+#change the direction of the evaluation of canteen attribute 
+# change raw: (1=most important - 5=least important) to classical: larger values indicate more importance
+#(5=most important - 1=least important)
+for (i in 1:nrow(canteen)){
+  canteen[i,1:7] <- as.numeric(canteen[i,1:7])
+  for (j in 1:(ncol(canteen)-1)){
+    if (canteen[i,j]!=0) {canteen[i,j]<- 6-canteen[i,j]}
+  }#the last column=ID
+}
+#clustering of the customers based on their evaluation of canteen attributes
+#standardization
+stcanteen<-scale(data.frame(canteen[,-c(8)]))
+
+#Squared Euclidean distance
+dist<-dist(stcanteen,method="euclidean")^2
+
+#Ward's method
+#dist<-dist(exp,method="euclidean")^2
+fit <- hclust(dist, method="ward.D")
+round(cor(canteen[,-c(8)]),2)
+```
+
+
+```{r}
+## decide number of clusters
+ggplot(mapping=aes(x=1:length(fit$height),y=fit$height))+
+  geom_line()+
+  geom_point()+
+  labs(x="stage",y="height")
+stcanteen$id <-c(1:53)
+plot(fit,labels=stcanteen$id,hang=-1,sub="",xlab="",main="")
+
+```
+From the stage-height plot, we find the first significant height jump appears between the last fourth and third points.
+A 4-cluster solution is recommended.
+
+#profile of the clusters
+```{r}
+#clustering and read profiles
+cluster<-cutree(fit,k=4)
+sol <- data.frame(cluster,canteen)
+table(sol$cluster)
+
+#cluster means
+tb<-aggregate(x=sol[,2:8],list(cluster=sol$cluster),FUN=mean)
+
+#profile plot
+tbm<-melt(tb,id.vars='cluster')
+tbm$cluster<-factor(tbm$cluster)
+ggplot(tbm, 
+       aes(x = variable, y = value, group = cluster, colour = cluster)) + 
+  geom_line(aes(linetype=cluster))+
+  geom_point(aes(shape=cluster)) +
+  geom_hline(yintercept=0) +
+  labs(x=NULL,y="mean")
+
+
+```
+The plot above shows the mean values of attribute importancy evaluated by the 4 clusters of customers.
+Group 1 assign high scores for all values. They care slightly more about taste, efficiency, value for price and location than other factors. 
+Group 2 espicailly care about loation and taste. They do not care so much about environment, efficiency and value for price and not at all care about quantity and display.
+Group 3 care the most about efficiency and taste, the least about display and environment.
+Group 4 care about location the most and then care about taste. Other factors are latively less important for them.
+
+```{r}
+profile <-read.csv("../data/cluster_profile.csv")
+profile[,c(3,4)] <- sol[,c("id","cluster")]
+profile<-profile[,c(3,4,2,1)]
+profile<-profile[order(profile$cluster),]
+names(profile)<-c("id","cluster","most_visited","freq_eatatcampus")
+sol$most_visited<-profile$most_visited
+sol$freq_eatatcampus<-profile$freq_eatatcampus
+BBB=table (profile$cluster,profile$ freq_eatatcampus)
+freq=matrix(,nrow=4,ncol =4)
+#see how frequent do customers from each cluster eat on 
+colnames(freq)=c("0-2","12-more","3-5","6-11")
+rownames(freq)=c("G 1: General","G 2: Convenient","G 3: Efficient","G 4: Demanding")
+freq[1,]=percent(BBB[1,]/18)
+freq[2,]=percent(BBB[2,]/12)
+freq[3,]=percent(BBB[3,]/6)
+freq[4,]=percent(BBB[4,]/17)
+freq
+freq=freq[,c(1,3,4,2)]
+freq
+```
+
+?????
+Are every cluster satisfied? (Are their ideal points match with the most_visited?)
+3.看看大家有没有满足（理想型和最常去有没有match）
+?????So what
+
+
+???? Keep this part or not??? (Factor analysis)
+##Reduce the dimensions involved in this survey
+```{r}
+fit<-principal(r=canteen[,-c(8)], nfactors=7,rotate="none")
+fit
+scree(rx=canteen[,-c(8)],factor=FALSE)
+fitr <- principal(r=canteen[,-c(8)],nfactors=2,rotate="varimax",method="regression")
+fitr
+#coefficients to calcualte the factor scores
+fitr$weights
+#factor scores
+head(fitr$scores)
+#plot of factor loadings
+ld<-data.frame(fitr$loadings[,1:2])
+ggplot(data=ld,aes(x=RC1,y=RC2))+
+  geom_point()+
+  geom_text(aes(label=rownames(ld),vjust=1))+
+  geom_vline(aes(xintercept=0))+
+  geom_hline(aes(yintercept=0))+
+  coord_cartesian(xlim = c(-1,1),ylim=c(-1,1)) 
+
+```
+From the analysis above, we can see a 2-factor solution can explain 59% of the variance. One of the factor appears to be location and the other factor is the overall quality of the restaurant, regarding the food it provides, service efficiency and environment, ect.
+
