@@ -2,7 +2,7 @@
 
 This course project analyzes how HKU students feel about campus catering system and whether their dining preferences and tastes have been satisfied.
 
-Our report can be found [here](https://github.com/dennissxz/canteen/report.pdf).
+Our report can be found [here](https://github.com/dennissxz/campus-catering/report.pdf).
 
 ## Objectives
 
