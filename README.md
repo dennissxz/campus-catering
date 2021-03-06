@@ -2,7 +2,7 @@
 
 This course project analyzes how HKU students feel about campus catering system and whether their dining preferences and tastes have been satisfied.
 
-Our report can be found [here](https://github.com/dennissxz/campus-catering/report.pdf).
+Our report can be found [here](https://dennissxz.github.io/campus-catering/report.pdf).
 
 ## Objectives
 
@@ -13,15 +13,13 @@ catering services at HKU.
 specific segment of students’ preferences.
 
 
-## Statistical methods
+## Statistical Methods
 
-- Factor analysis is used to find whether there are any underlying factors behind the attributes of canteens
-- Multidimensional scaling unfolding is applied to gain insights of object’s preference for catering services.
-- Cluster analysis is utilized to segment the surveyed subjects.
-- Correspondence analysis is used to find out attributes of canteens perceived by
-students.
-- Conjoint Analysis is used to find out the importance of essential factors when
-designing a new canteen.
+- factor analysis: find whether there are any underlying factors behind canteens attributes.
+- multidimensional scaling: gain insights of subject' preference for catering services.
+- cluster analysis: segment the surveyed subjects.
+- correspondence analysis: find canteens attributes perceived by students.
+- conjoint analysis: find the importance of essential factors when designing a new canteen.
 
 ## Contributors
 
